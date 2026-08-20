@@ -1,0 +1,318 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "ZCOOL XiaoWei", "Noto Sans SC", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-numeric: "Space Grotesk", "Noto Sans SC", sans-serif;
+
+  --color-ink: #060a13;
+  --color-abyss: #0a1120;
+  --color-panel: #0c1526;
+  --color-line: #22304a;
+  --color-line-soft: #182340;
+  --color-fog: #8fa2bb;
+  --color-mist: #c3d0e2;
+  --color-snow: #eaf2fc;
+  --color-solar: #ffc46b;
+  --color-solar-deep: #f59b23;
+  --color-hud: #6ee7d8;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-snow);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(255, 196, 107, 0.28);
+  color: #fff7e8;
+}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #080d18;
+}
+::-webkit-scrollbar-thumb {
+  background: #22304a;
+  border-radius: 8px;
+  border: 2px solid #080d18;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #33486b;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50% { transform: scale(1.12); opacity: 0.85; }
+}
+
+@keyframes scan-ring {
+  0% { transform: scale(0.55); opacity: 0.95; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbit-dash {
+  to { stroke-dashoffset: -120; }
+}
+
+@keyframes shooting {
+  0% { transform: translate3d(0, 0, 0) rotate(-32deg); opacity: 0; }
+  4% { opacity: 0.9; }
+  14% { transform: translate3d(-46vw, 26vw, 0) rotate(-32deg); opacity: 0; }
+  100% { transform: translate3d(-46vw, 26vw, 0) rotate(-32deg); opacity: 0; }
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(2.5%, -2%, 0); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-2%, 2.4%, 0); }
+}
+
+@keyframes blink-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.14); }
+}
+
+.overlay-enter {
+  animation: fade-in 0.32s ease both;
+}
+
+.view-enter {
+  animation: view-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kenburns {
+  animation: kenburns 22s ease-in-out infinite alternate;
+}
+
+/* ---------- starfield ---------- */
+.star-tw {
+  animation: twinkle var(--tw-dur, 4s) ease-in-out infinite;
+  animation-delay: var(--tw-delay, 0s);
+}
+
+.nebula-a { animation: drift-a 26s ease-in-out infinite; }
+.nebula-b { animation: drift-b 32s ease-in-out infinite; }
+
+.shooting-star {
+  position: absolute;
+  width: 130px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(234, 242, 252, 0.9), rgba(234, 242, 252, 0));
+  filter: drop-shadow(0 0 6px rgba(190, 220, 255, 0.8));
+  opacity: 0;
+  animation: shooting 11s linear infinite;
+  animation-delay: var(--sh-delay, 2s);
+  pointer-events: none;
+}
+
+.noise-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+}
+
+/* ---------- orrery ---------- */
+.sun-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sun-pulse 5.5s ease-in-out infinite;
+}
+
+.hud-rotor {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-slow 90s linear infinite;
+}
+
+.orbit-line {
+  transition: stroke 0.35s ease, opacity 0.35s ease;
+}
+.orbit-line.is-hot {
+  stroke-dasharray: 5 7;
+  animation: orbit-dash 4s linear infinite;
+}
+
+.planet-node {
+  cursor: pointer;
+  outline: none;
+}
+.planet-node .planet-body {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+}
+.planet-node:hover .planet-body,
+.planet-node:focus-visible .planet-body {
+  transform: scale(1.28);
+}
+.planet-node .label-txt {
+  opacity: 0.72;
+  transition: opacity 0.3s ease;
+}
+.planet-node:hover .label-txt {
+  opacity: 1;
+}
+
+.scan-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: scan-ring 1.8s cubic-bezier(0.2, 0.6, 0.36, 1) infinite;
+}
+
+.blink-dot {
+  animation: blink-soft 1.6s ease-in-out infinite;
+}
+
+/* ---------- HUD panel chrome ---------- */
+.hud-panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(13, 22, 40, 0.96), rgba(8, 13, 24, 0.94));
+  border: 1px solid var(--color-line);
+  box-shadow: 0 18px 50px rgba(2, 5, 12, 0.55);
+}
+.hud-panel::before,
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.hud-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--corner-c, #6ee7d8);
+  border-left: 2px solid var(--corner-c, #6ee7d8);
+}
+.hud-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--corner-c, #6ee7d8);
+  border-right: 2px solid var(--corner-c, #6ee7d8);
+}
+
+.info-panel-enter {
+  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- scroll reveal ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--rv-delay, 0s);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- range input ---------- */
+input[type="range"].speed-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f59b23 var(--fill, 30%), #22304a var(--fill, 30%));
+  outline: none;
+}
+input[type="range"].speed-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffc46b;
+  border: 3px solid #0c1526;
+  box-shadow: 0 0 0 1px #f59b23, 0 0 14px rgba(245, 155, 35, 0.55);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+input[type="range"].speed-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+input[type="range"].speed-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffc46b;
+  border: 3px solid #0c1526;
+  box-shadow: 0 0 0 1px #f59b23, 0 0 14px rgba(245, 155, 35, 0.55);
+  cursor: pointer;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+  }
+  .shooting-star,
+  .scan-ring,
+  .sun-glow,
+  .hud-rotor {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
