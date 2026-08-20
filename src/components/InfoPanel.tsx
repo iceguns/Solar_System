@@ -1,5 +1,6 @@
 import { ALL_BODIES } from "../data/planets";
 import type { CelestialBody } from "../data/planets";
+import { GAS_COLORS } from "../data/extras";
 
 interface InfoPanelProps {
   body: CelestialBody | null;
@@ -11,8 +12,17 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   return (
     <div className="border border-line/70 bg-ink/40 px-3 py-2.5">
       <div className="text-[10px] tracking-[0.18em] text-fog">{label}</div>
-      <div className="mt-1 font-numeric text-[15px] font-medium leading-tight text-snow">{value}</div>
-      {sub && <div className="mt-0.5 font-numeric text-[11px] text-fog">{sub}</div>}
+      <div className="mt-1 font-numeric text-[14px] font-medium leading-tight text-snow">{value}</div>
+      {sub && <div className="mt-0.5 font-numeric text-[10.5px] text-fog">{sub}</div>}
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-line/50 py-2 last:border-0">
+      <span className="shrink-0 text-[10px] tracking-[0.18em] text-fog">{label}</span>
+      <span className="text-right text-xs leading-relaxed text-mist">{value}</span>
     </div>
   );
 }
@@ -29,13 +39,13 @@ export default function InfoPanel({ body, onClose, onNavigate }: InfoPanelProps)
   return (
     <aside
       key={body.id}
-      className="hud-panel info-panel-enter absolute inset-x-3 bottom-3 z-20 max-h-[58%] overflow-y-auto sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-1/2 sm:z-10 sm:max-h-[88%] sm:w-[330px] sm:-translate-y-1/2"
+      className="hud-panel info-panel-enter absolute inset-x-3 bottom-3 z-20 max-h-[62%] overflow-y-auto sm:inset-x-auto sm:bottom-auto sm:right-4 sm:top-1/2 sm:z-10 sm:max-h-[88%] sm:w-[352px] sm:-translate-y-1/2"
       style={{ "--corner-c": body.color } as React.CSSProperties}
       role="dialog"
       aria-label={`${body.name}档案`}
     >
       {/* 头部 */}
-      <div className="flex items-start gap-3 border-b border-line/80 px-5 pb-4 pt-5">
+      <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-line/80 bg-panel/95 px-5 pb-4 pt-5 backdrop-blur-sm">
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl"
           style={{
@@ -63,23 +73,29 @@ export default function InfoPanel({ body, onClose, onNavigate }: InfoPanelProps)
       </div>
 
       <div className="px-5 py-4">
-        <div
-          className="mb-4 inline-block border px-2.5 py-1 text-[11px] tracking-widest"
-          style={{ borderColor: `${body.color}55`, color: body.color, background: `${body.color}12` }}
-        >
-          {body.category}
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="inline-block border px-2.5 py-1 text-[11px] tracking-widest"
+            style={{ borderColor: `${body.color}55`, color: body.color, background: `${body.color}12` }}
+          >
+            {body.category}
+          </div>
+          <div className="font-numeric text-[10px] uppercase tracking-[0.18em] text-fog/80">#{String(idx + 1).padStart(2, "0")}</div>
         </div>
 
         {/* 核心数据 */}
-        <div className="grid grid-cols-2 gap-2">
-          <Stat label="直径 SIZE" value={body.diameterLabel} />
+        <div className="mt-3.5 grid grid-cols-2 gap-2">
+          <Stat label="直径 SIZE" value={body.diameterLabel} sub={`≈ 地球 × ${body.earthRatio}`} />
           <Stat label="距太阳 DISTANCE" value={body.distanceLabel} sub={body.distanceAU} />
           <Stat label="公转周期 ORBIT" value={body.orbitPeriodLabel} />
           <Stat label="自转周期 SPIN" value={body.rotationLabel} />
+          <Stat label="质量 MASS" value={body.massLabel} />
+          <Stat label="表面重力 GRAVITY" value={body.gravityLabel} />
+          <Stat label="轴倾角 TILT" value={body.tiltLabel} />
+          <Stat label="光照时延 LIGHT" value={body.lightLabel} />
           <Stat label="已知卫星 MOONS" value={body.moons === null ? "—" : `${body.moons} 颗`} />
           <Stat label="轨道速度 VELOCITY" value={body.velocityLabel} />
         </div>
-
         <div className="mt-2">
           <Stat label="温度 TEMPERATURE" value={body.tempLabel} />
         </div>
@@ -108,10 +124,55 @@ export default function InfoPanel({ body, onClose, onNavigate }: InfoPanelProps)
           </div>
         </div>
 
+        {/* 大气成分 */}
+        <div className="mt-4">
+          <div className="flex items-baseline justify-between text-[11px] tracking-widest text-fog">
+            <span>大气成分 ATMOSPHERE</span>
+            <span className="font-numeric text-[10px] text-fog/70">体积占比 · 约数</span>
+          </div>
+          <div className="mt-2 flex h-3 w-full overflow-hidden rounded-sm bg-line/40">
+            {body.atmo.map((a) => (
+              <div
+                key={a.gas}
+                title={`${a.gas} ${a.pct}%`}
+                className="h-full transition-opacity duration-200 hover:opacity-75"
+                style={{
+                  width: `${Math.max(a.pct, 2)}%`,
+                  background: GAS_COLORS[a.gas] ?? "#8b98ab",
+                }}
+              />
+            ))}
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+            {body.atmo.map((a) => (
+              <span key={a.gas} className="flex items-center gap-1.5 font-numeric text-[10.5px] text-fog">
+                <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: GAS_COLORS[a.gas] ?? "#8b98ab" }} />
+                {a.gas} {a.pct}%
+              </span>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-fog/80">{body.atmoNote}</p>
+        </div>
+
+        {/* 卫星 / 探测 / 发现 */}
+        <div className="mt-3.5 border border-line/60 bg-ink/30 px-3.5 py-1.5">
+          <Row label="著名卫星" value={body.moonsLabel} />
+          <Row label="探测任务" value={body.missionLabel} />
+          <Row label="观测发现" value={body.discoveryLabel} />
+        </div>
+
         {/* 趣闻 */}
         <div className="mt-4 border-l-2 pl-3" style={{ borderColor: body.color }}>
           <div className="text-[10px] tracking-[0.22em] text-fog">档案备注 · NOTE</div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-mist">{body.fact}</p>
+          <ul className="mt-2.5 space-y-1.5">
+            {body.facts.map((f) => (
+              <li key={f} className="flex gap-2 text-xs leading-relaxed text-fog">
+                <span className="mt-[7px] inline-block h-1 w-1 shrink-0 rounded-full" style={{ background: body.color }} />
+                {f}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* 上一颗 / 下一颗 */}

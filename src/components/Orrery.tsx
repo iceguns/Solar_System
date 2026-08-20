@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ALL_BODIES, PLANETS, SUN, EARTH_DEMO_PERIOD } from "../data/planets";
 import type { CelestialBody } from "../data/planets";
 
@@ -6,7 +6,41 @@ const CX = 460;
 const CY = 330;
 const TILT = 0.78; // 轻微俯视倾角，制造纵深
 
-const START_ANGLES = [-0.9, 0.7, 2.1, -2.35, 0.35, -1.15, 1.65, -0.2];
+const START_ANGLES = [-0.9, 0.7, 2.1, -2.35, 0.35, -1.15, 1.65, -0.2, -1.7];
+
+interface BeltDot {
+  x: number;
+  y: number;
+  r: number;
+  o: number;
+  c: string;
+}
+
+function mulberry32(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function makeBelt(count: number, seed: number, rMin: number, rMax: number, colors: string[]): BeltDot[] {
+  const rnd = mulberry32(seed);
+  return Array.from({ length: count }, () => {
+    const th = rnd() * Math.PI * 2;
+    const r = rMin + rnd() * (rMax - rMin);
+    return {
+      x: CX + r * Math.cos(th),
+      y: CY + r * Math.sin(th) * TILT,
+      r: 0.5 + rnd() * 1.15,
+      o: 0.12 + rnd() * 0.36,
+      c: colors[Math.floor(rnd() * colors.length)],
+    };
+  });
+}
 
 interface OrreryProps {
   running: boolean;
@@ -37,6 +71,9 @@ export default function Orrery({
   runningRef.current = running;
   const speedRef = useRef(speed);
   speedRef.current = speed;
+
+  const asteroids = useMemo(() => makeBelt(120, 88421, 190, 214, ["#9aa7ba", "#b7a98f", "#8b98ab"]), []);
+  const kuiper = useMemo(() => makeBelt(90, 30977, 368, 390, ["#8fa6c4", "#7d90ad", "#a3b6d1"]), []);
 
   useEffect(() => {
     let raf = 0;
@@ -72,6 +109,18 @@ export default function Orrery({
   const positions = PLANETS.map(pos);
   const behind = PLANETS.map((p, i) => ({ p, i, ...positions[i] })).filter((d) => d.behind);
   const front = PLANETS.map((p, i) => ({ p, i, ...positions[i] })).filter((d) => !d.behind);
+
+  /** 运动尾迹：行星身后约 30° 的弧线，指示运动方向 */
+  const trailPath = (p: CelestialBody, i: number) => {
+    const a = anglesRef.current[i];
+    const a0 = a - 0.55;
+    const R = p.orbitRadius;
+    const x0 = CX + R * Math.cos(a0);
+    const y0 = CY + R * Math.sin(a0) * TILT;
+    const x1 = CX + R * Math.cos(a);
+    const y1 = CY + R * Math.sin(a) * TILT;
+    return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${R} ${(R * TILT).toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  };
 
   const days = simDaysRef.current;
   const years = Math.floor(days / 365.25);
@@ -217,15 +266,15 @@ export default function Orrery({
 
         {/* 观测台 HUD 装饰 */}
         <g opacity="0.5" pointerEvents="none">
-          <circle cx={CX} cy={CY} r="402" fill="none" stroke="#22304a" strokeWidth="1" strokeDasharray="2 9" className={reducedMotion ? "" : "hud-rotor"} />
+          <circle cx={CX} cy={CY} r="412" fill="none" stroke="#22304a" strokeWidth="1" strokeDasharray="2 9" className={reducedMotion ? "" : "hud-rotor"} />
           <circle cx={CX} cy={CY} r="60" fill="none" stroke="#22304a" strokeWidth="1" strokeDasharray="1 6" />
-          <line x1={CX - 420} y1={CY} x2={CX + 420} y2={CY} stroke="#22304a" strokeWidth="0.6" opacity="0.5" />
-          <line x1={CX} y1={CY - 318} x2={CX} y2={CY + 318} stroke="#22304a" strokeWidth="0.6" opacity="0.5" />
+          <line x1={CX - 430} y1={CY} x2={CX + 430} y2={CY} stroke="#22304a" strokeWidth="0.6" opacity="0.5" />
+          <line x1={CX} y1={CY - 322} x2={CX} y2={CY + 322} stroke="#22304a" strokeWidth="0.6" opacity="0.5" />
           {[
-            { t: "0°", x: CX + 412, y: CY + 4 },
-            { t: "90°", x: CX, y: CY + 316 },
-            { t: "180°", x: CX - 412, y: CY + 4 },
-            { t: "270°", x: CX, y: CY - 306 },
+            { t: "0°", x: CX + 422, y: CY + 4 },
+            { t: "90°", x: CX, y: CY + 320 },
+            { t: "180°", x: CX - 422, y: CY + 4 },
+            { t: "270°", x: CX, y: CY - 312 },
           ].map((d) => (
             <text key={d.t} x={d.x} y={d.y} textAnchor="middle" fontSize="10" fill="#4a5c78" style={{ fontFamily: "var(--font-numeric)" }}>
               {d.t}
@@ -233,10 +282,56 @@ export default function Orrery({
           ))}
         </g>
 
+        {/* 小行星带 / 柯伊伯带（边界虚线 + 缓慢旋转的碎石） */}
+        <g pointerEvents="none">
+          {[190, 214, 368, 390].map((r) => (
+            <ellipse
+              key={`band-${r}`}
+              cx={CX}
+              cy={CY}
+              rx={r}
+              ry={r * TILT}
+              fill="none"
+              stroke="#2c3d5c"
+              strokeWidth="0.7"
+              strokeDasharray="2 7"
+              opacity="0.38"
+            />
+          ))}
+          <g
+            className={reducedMotion ? "" : "hud-rotor"}
+            style={{ transformBox: "view-box", transformOrigin: `${CX}px ${CY}px`, animationDuration: "260s" }}
+          >
+            {asteroids.map((d, i) => (
+              <circle key={`a${i}`} cx={d.x} cy={d.y} r={d.r} fill={d.c} opacity={d.o} />
+            ))}
+          </g>
+          <g
+            className={reducedMotion ? "" : "hud-rotor"}
+            style={{
+              transformBox: "view-box",
+              transformOrigin: `${CX}px ${CY}px`,
+              animationDuration: "420s",
+              animationDirection: "reverse",
+            }}
+          >
+            {kuiper.map((d, i) => (
+              <circle key={`k${i}`} cx={d.x} cy={d.y} r={d.r} fill={d.c} opacity={d.o} />
+            ))}
+          </g>
+          <text x={CX + 202} y={CY + 14} fontSize="9.5" fill="#4a5c78" letterSpacing="0.14em" style={{ fontFamily: "var(--font-body)" }}>
+            小行星带
+          </text>
+          <text x={CX + 372} y={CY - 10} fontSize="9.5" fill="#4a5c78" letterSpacing="0.14em" style={{ fontFamily: "var(--font-body)" }}>
+            柯伊伯带
+          </text>
+        </g>
+
         {/* 轨道 */}
         {showOrbits &&
           PLANETS.map((p) => {
             const hot = hotId === p.id;
+            const dwarf = p.id === "pluto";
             return (
               <ellipse
                 key={`orbit-${p.id}`}
@@ -248,10 +343,25 @@ export default function Orrery({
                 fill="none"
                 stroke={hot ? p.color : "#2c3d5c"}
                 strokeWidth={hot ? 1.4 : 1}
-                opacity={hot ? 0.9 : 0.55}
+                opacity={hot ? 0.9 : dwarf ? 0.4 : 0.55}
+                strokeDasharray={dwarf && !hot ? "6 7" : undefined}
               />
             );
           })}
+
+        {/* 运动尾迹（指示方向） */}
+        {PLANETS.map((p, i) => (
+          <path
+            key={`trail-${p.id}`}
+            d={trailPath(p, i)}
+            fill="none"
+            stroke={p.color}
+            strokeWidth={p.id === "pluto" ? 1.2 : 1.8}
+            strokeLinecap="round"
+            opacity={hotId === p.id ? 0.6 : 0.32}
+            pointerEvents="none"
+          />
+        ))}
 
         {/* 太阳后方的行星 */}
         {behind.map((d) => renderPlanet(d.p, d.i, d.x, d.y))}
