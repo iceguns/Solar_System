@@ -208,20 +208,37 @@ export default function Orrery({
           />
         )}
         {(showLabels || isSel || isHot) && (
-          <text
-            className="label-txt"
-            x={x}
-            y={y - p.sizeRadius - (p.id === "saturn" ? 16 : 9)}
-            textAnchor="middle"
-            fontSize="13"
-            fill="#eaf2fc"
-            stroke="#060a13"
-            strokeWidth="3.5"
-            paintOrder="stroke"
-            style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.08em" }}
-          >
-            {p.name}
-          </text>
+          <>
+            {isSel && (
+              <text
+                x={x}
+                y={y - p.sizeRadius - (p.id === "saturn" ? 32 : 24)}
+                textAnchor="middle"
+                fontSize="9"
+                fill={p.color}
+                stroke="#060a13"
+                strokeWidth="3"
+                paintOrder="stroke"
+                style={{ fontFamily: "var(--font-numeric)", letterSpacing: "0.12em" }}
+              >
+                {p.distanceAU} · {p.orbitPeriodLabel}
+              </text>
+            )}
+            <text
+              className="label-txt"
+              x={x}
+              y={y - p.sizeRadius - (p.id === "saturn" ? 16 : 9)}
+              textAnchor="middle"
+              fontSize="13"
+              fill="#eaf2fc"
+              stroke="#060a13"
+              strokeWidth="3.5"
+              paintOrder="stroke"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.08em" }}
+            >
+              {p.name}
+            </text>
+          </>
         )}
         {/* 扩大点击热区 */}
         <circle cx={x} cy={y} r={Math.max(p.sizeRadius + 11, 16)} fill="transparent" />
@@ -394,20 +411,37 @@ export default function Orrery({
             style={hotId === "sun" ? { filter: "drop-shadow(0 0 22px rgba(255,170,60,0.8))" } : undefined}
           />
           {(showLabels || selectedId === "sun" || hoverId === "sun") && (
-            <text
-              className="label-txt"
-              x={CX}
-              y={CY - SUN.sizeRadius - 12}
-              textAnchor="middle"
-              fontSize="13"
-              fill="#ffd9a0"
-              stroke="#060a13"
-              strokeWidth="3.5"
-              paintOrder="stroke"
-              style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.08em" }}
-            >
-              太阳
-            </text>
+            <>
+              {selectedId === "sun" && (
+                <text
+                  x={CX}
+                  y={CY - SUN.sizeRadius - 27}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="#ffd166"
+                  stroke="#060a13"
+                  strokeWidth="3"
+                  paintOrder="stroke"
+                  style={{ fontFamily: "var(--font-numeric)", letterSpacing: "0.12em" }}
+                >
+                  G2V · 5,505°C · 1.989×10³⁰ kg
+                </text>
+              )}
+              <text
+                className="label-txt"
+                x={CX}
+                y={CY - SUN.sizeRadius - 12}
+                textAnchor="middle"
+                fontSize="13"
+                fill="#ffd9a0"
+                stroke="#060a13"
+                strokeWidth="3.5"
+                paintOrder="stroke"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.08em" }}
+              >
+                太阳
+              </text>
+            </>
           )}
           <circle cx={CX} cy={CY} r={SUN.sizeRadius + 12} fill="transparent" />
         </g>
